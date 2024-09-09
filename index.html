@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>金昌市各小区所属街道和社区查询</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f2f5;
+            color: #333;
+        }
+        h1 {
+            text-align: center;
+            color: #1a5f7a;
+            margin-bottom: 30px;
+        }
+        .search-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        #result {
+            margin-top: 20px;
+        }
+        .result-item {
+            background-color: white;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .result-item p {
+            margin: 5px 0;
+        }
+        .copy-btn {
+            background-color: #1a5f7a;
+            border: none;
+            color: white;
+            padding: 8px 15px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 14px;
+            margin-top: 10px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        .copy-btn:hover {
+            background-color: #134b61;
+        }
+        #tempInput {
+            position: absolute;
+            left: -1000px;
+            top: -1000px;
+        }
+    </style>
+</head>
+<body>
+    <h1>金昌市各小区所属街道和社区查询</h1>
+    <div class="search-container">
+        <input type="text" id="search" placeholder="请输入小区名称">
+    </div>
+    <div id="result"></div>
+    <input type="text" id="tempInput">
+
+    <script>
+        const data = [
+            {street: "滨河路街道", community: "龙泉里社区", neighborhoods: ["紫荆花园", "2号区", "紫金公馆", "龙泉家园", "西部天地高层", "龙川家园", "干休院"]},
+            {street: "滨河路街道", community: "龙集里社区", neighborhoods: ["白泉村", "7号区", "聚金润园"]},
+            {street: "滨河路街道", community: "龙岗里社区", neighborhoods: ["金百家属楼", "邮政家属楼", "龙泉雅苑", "6号区"]},
+            {street: "滨河路街道", community: "龙云里社区", neighborhoods: ["华芳家园", "宁建大院", "地税家属院", "三星大院", "天庆家园"]},
+            {street: "滨河路街道", community: "龙广里社区", neighborhoods: ["广厦花园", "聚金怡园", "新金源小区", "丽景西苑"]},
+            {street: "北京路街道", community: "龙门里社区", neighborhoods: ["3号区住宅小区"]},
+            {street: "北京路街道", community: "金冶里社区", neighborhoods: ["5号区", "8号区住宅小区"]},
+            {street: "金川路街道", community: "金水里社区", neighborhoods: ["一公司院", "二公司院", "9区公司院", "金水湾A区", "金水湾B区", "电信院", "环卫局家属院", "社区门前零散楼栋"]},
+            {street: "金川路街道", community: "金都里社区", neighborhoods: ["金都家园", "二公司院", "五公司院", "荣昌家园", "供销院", "移动家属院", "建行院", "农行院", "独1", "独2栋"]},
+            {street: "金川路街道", community: "金阳里社区", neighborhoods: ["11区", "12区", "中港PARK", "电影南北楼", "铭峰首座", "金汇苑供销家属楼", "人防家属楼", "金融小苑", "邮政家属院"]},
+            {street: "金川路街道", community: "金谷里社区", neighborhoods: ["13区", "供销家属院", "温州商住楼", "丽景苑小区", "石油公司家属院", "金三角商厦高层", "公园家属楼"]},
+            {street: "金川路街道", community: "金芝里社区", neighborhoods: ["金芝家园", "裕丰花园", "八冶小区", "公司小区", "八冶家属院", "祥达小区"]},
+            {street: "金川路街道", community: "金建里社区", neighborhoods: ["八冶自管小区", "农行家属院", "工行家属院", "新公司院", "老公司院", "丽舍家园", "新华书店家属院"]},
+            {street: "新华路街道", community: "昌荣里社区", neighborhoods: ["昌荣新城", "供电家属院", "上层领地", "烟草公司家属院", "15区政府巷西", "公检法家属楼", "水务局家属楼", "供热家属楼", "保险", "石油家属院", "金源小区", "复训队", "14区", "15区"]},
+            {street: "新华路街道", community: "昌都里社区", neighborhoods: ["上海路街景房", "阳光华庭", "天润嘉园", "世纪金都", "世纪金都西区", "恒昌一品", "金源新区", "天象尚居", "恒昌首府", "白家嘴公租房", "白家嘴新村"]},
+            {street: "新华路街道", community: "昌泰里社区", neighborhoods: ["恒昌国际", "恒昌花园", "恒昌豪庭", "26区", "文教苑", "市财政局家属楼", "市人大政协家属楼", "德庄巷", "国红华昌", "体育楼", "文武公寓", "广电楼", "武装部家属楼", "天象尊品"]},
+            {street: "新华路街道", community: "昌安里社区", neighborhoods: ["香格里拉", "金盛华城", "金盛金水湾", "力昌公园里", "新川化工宿舍楼", "宜和居", "西坡天庆二期"]},
+            {street: "新华路街道", community: "昌丰里社区", neighborhoods: ["八冶颐养", "恒昌华府", "龙泉花园", "金沙公馆", "龙首一号"]},
+            {street: "新华路街道", community: "昌达里社区", neighborhoods: ["金域名都", "融兴嘉苑", "昌达花园", "龙庭佳苑", "原毛纺厂家属楼", "鲜花云溪", "国芳雍景苑"]},
+            {street: "广州路街道", community: "宝晶里社区", neighborhoods: ["19区"]},
+            {street: "广州路街道", community: "宝运里社区", neighborhoods: ["21区"]},
+            {street: "广州路街道", community: "天源里社区", neighborhoods: ["高岸子天庆", "金泥家属院", "金湖润园"]},
+            {street: "桂林路街道", community: "宝林里社区", neighborhoods: ["金川公司22号住宅小区", "金辰丽苑", "亨美花园", "金都花园(六中对面)", "公路段家属院", "宝林家园", "王平楼", "宁中楼"]},
+            {street: "桂林路街道", community: "宝星里社区", neighborhoods: ["公司20区", "天瑞花园", "昌泰安置家园", "宝星花园", "昌泰嘉堡", "聚金馨园", "金都花园(昌泰市场)", "怡景园", "鲁城新居", "东辰花园国税家属楼", "宝星巷8栋", "宝崖巷1株", "柴家院", "双建5号家属楼", "两栖院", "双建家属院", "镍城花园", "三星大院", "供销家属院", "六和居", "二建家属楼"]},
+            {street: "桂林路街道", community: "昌文里社区", neighborhoods: ["25号小区", "四号果园"]},
+            {street: "桂林路街道", community: "昌福里社区", neighborhoods: ["27区", "长泰家园", "昌泰绿洲家园", "金港花园", "春诚花园", "金和花园", "畜产品家属楼"]},
+            {street: "宁远堡镇", community: "宁远堡镇", neighborhoods: ["白家嘴村", "西坡村", "马家崖村", "高崖子村", "中牌村", "龙景村", "宁远村", "东湾村", "西湾村", "新安村", "山湾村", "新华村", "下四分村", "油籽洼村"]},
+            {street: "双湾镇", community: "双湾镇", neighborhoods: ["龙源村", "龙寨村", "三角城村", "陈家沟村", "昔盘村", "九个井村", "新粮地村", "许家沟村", "金河村", "天生炕村", "康盛村", "古城村", "龙口村"]}
+        ];
+
+        const searchInput = document.getElementById('search');
+        const resultDiv = document.getElementById('result');
+
+        searchInput.addEventListener('input', function() {
+            const query = this.value.trim().toLowerCase();
+            if (query.length === 0) {
+                resultDiv.innerHTML = '';
+                return;
+            }
+
+            const matches = data.filter(item => 
+                item.neighborhoods.some(neighborhood => 
+                    neighborhood.toLowerCase().includes(query)
+                )
+            );
+
+            if (matches.length > 0) {
+                const result = matches.map(item => {
+                    const matchedNeighborhood = item.neighborhoods.find(n => n.toLowerCase().includes(query));
+                    // 检查小区名称是否已经包含"小区"
+                    const neighborhoodDisplay = matchedNeighborhood.endsWith('小区') ? matchedNeighborhood : `${matchedNeighborhood}小区`;
+                    const fullAddress = `金昌市金川区${item.street}${item.community}${neighborhoodDisplay}`;
+                    return `<div class="result-item">
+                        <p><strong>小区:</strong> ${neighborhoodDisplay}</p>
+                        <p><strong>街道:</strong> ${item.street}</p>
+                        <p><strong>社区:</strong> ${item.community}</p>
+                        <p><strong>完整地址:</strong> ${fullAddress}</p>
+                        <button class="copy-btn" onclick="copyToClipboard('${fullAddress}')">复制地址</button>
+                    </div>`;
+                }).join('');
+                resultDiv.innerHTML = result;
+            } else {
+                resultDiv.innerHTML = '<div class="result-item"><p>未找到匹配的小区</p></div>';
+            }
+        });
+
+        function copyToClipboard(text) {
+            const tempInput = document.getElementById('tempInput');
+            tempInput.value = text;
+            tempInput.select();
+            tempInput.setSelectionRange(0, 99999); // 适用于移动设备
+
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    alert('地址已复制到剪贴板');
+                } else {
+                    throw new Error('复制失败');
+                }
+            } catch (err) {
+                console.error('无法复制文本: ', err);
+                alert('复制失败，请手动复制地址');
+            }
+
+            // 恢复选区
+            window.getSelection().removeAllRanges();
+        }
+    </script>
+</body>
+</html>
